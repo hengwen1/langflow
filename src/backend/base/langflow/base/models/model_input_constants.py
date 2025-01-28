@@ -8,6 +8,7 @@ from langflow.components.models.deepseek import DeepSeekModelComponent
 from langflow.components.models.google_generative_ai import GoogleGenerativeAIComponent
 from langflow.components.models.groq import GroqModel
 from langflow.components.models.nvidia import NVIDIAModelComponent
+from langflow.components.models.ollama import ChatOllamaComponent
 from langflow.components.models.openai import OpenAIModelComponent
 from langflow.inputs.inputs import InputTypes, SecretStrInput
 from langflow.template.field.base import Input
@@ -159,6 +160,17 @@ def _get_deepseek_inputs_and_fields():
     return deepseek_inputs, create_input_fields_dict(deepseek_inputs, "")
 
 
+def _get_ollama_inputs_and_fields():
+    try:
+        from langflow.components.models.ollama import ChatOllamaComponent
+
+        ollama_inputs = get_filtered_inputs(ChatOllamaComponent)
+    except ImportError as e:
+        msg = "Ollama is not installed. Please install it with `pip install langflow-ollama`."
+        raise ImportError(msg) from e
+    return ollama_inputs, create_input_fields_dict(ollama_inputs, "")
+
+
 MODEL_PROVIDERS_DICT: dict[str, ModelProvidersDict] = {}
 
 # Try to add each provider
@@ -246,6 +258,17 @@ try:
         "inputs": deepseek_inputs,
         "prefix": "",
         "component_class": DeepSeekModelComponent(),
+    }
+except ImportError:
+    pass
+
+try:
+    ollama_inputs, ollama_fields = _get_ollama_inputs_and_fields()
+    MODEL_PROVIDERS_DICT["Ollama"] = {
+        "fields": ollama_fields,
+        "inputs": ollama_inputs,
+        "prefix": "",
+        "component_class": ChatOllamaComponent(),
     }
 except ImportError:
     pass
