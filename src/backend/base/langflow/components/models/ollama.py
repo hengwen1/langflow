@@ -208,14 +208,21 @@ class ChatOllamaComponent(LCModelComponent):
                     build_config["mirostat_eta"]["value"] = 0.1
                     build_config["mirostat_tau"]["value"] = 5
 
-        if field_name in {"base_url", "model_name"} and not await self.is_valid_ollama_url(field_value):
-            # Check if any URL in the list is valid
-            valid_url = ""
-            for url in URL_LIST:
-                if await self.is_valid_ollama_url(url):
-                    valid_url = url
-                    break
-            build_config["base_url"]["value"] = valid_url
+        if field_name == "base_url":
+            if not await self.is_valid_ollama_url(field_value):
+                # Check if any URL in the list is valid as fallback
+                valid_url = ""
+                for url in URL_LIST:
+                    if await self.is_valid_ollama_url(url):
+                        valid_url = url
+                        break
+                # update the base_url as fallback
+                build_config["base_url"]["value"] = valid_url
+                self.base_url = valid_url
+            else:
+                # update the base_url as set by the user
+                build_config["base_url"]["value"] = field_value
+                self.base_url = field_value
         if field_name in {"model_name", "base_url", "tool_model_enabled"}:
             if await self.is_valid_ollama_url(self.base_url):
                 tool_model_enabled = build_config["tool_model_enabled"].get("value", False) or self.tool_model_enabled

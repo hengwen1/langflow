@@ -54,14 +54,21 @@ class OllamaEmbeddingsComponent(LCModelComponent):
         return output
 
     async def update_build_config(self, build_config: dict, field_value: Any, field_name: str | None = None):
-        if field_name in {"base_url", "model_name"} and not await self.is_valid_ollama_url(field_value):
-            # Check if any URL in the list is valid
-            valid_url = ""
-            for url in URL_LIST:
-                if await self.is_valid_ollama_url(url):
-                    valid_url = url
-                    break
-            build_config["base_url"]["value"] = valid_url
+        if field_name == "base_url":
+            if not await self.is_valid_ollama_url(field_value):
+                # Check if any URL in the list is valid as fallback
+                valid_url = ""
+                for url in URL_LIST:
+                    if await self.is_valid_ollama_url(url):
+                            valid_url = url
+                            break
+                # update the base_url as fallback
+                build_config["base_url"]["value"] = valid_url
+                self.base_url = valid_url
+            else:
+                # update the base_url as set by the user
+                build_config["base_url"]["value"] = field_value
+                self.base_url = field_value
         if field_name in {"model_name", "base_url", "tool_model_enabled"}:
             if await self.is_valid_ollama_url(self.base_url):
                 build_config["model_name"]["options"] = await self.get_model(self.base_url)
