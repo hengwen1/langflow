@@ -203,6 +203,8 @@ class AgentComponent(ToolCallingAgentComponent):
 
                 # Delete fields from other providers
                 for fields in fields_to_delete:
+                    # delete verbose from fields as it is required by the default build_config
+                    fields = [field for field in fields if field != "verbose"]
                     self.delete_fields(build_config, fields)
 
                 # Add provider-specific fields
